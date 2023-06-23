@@ -1,5 +1,6 @@
 import numpy as np
 import time
+#hello
 
 SIZE = np.array([10,10])
 block_size = 40
