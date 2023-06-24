@@ -1,10 +1,13 @@
 import numpy as np
 import time
-#hello
 
-SIZE = np.array([10,10])
+SIZE = np.array([5,5])
 block_size = 40
 Map = np.zeros(SIZE).astype(int)
+human = __name__ == '__main__'
+steps = 0
+score_arr = []
+
 def map_reset():
     global Map
     Map = np.zeros(SIZE).astype(int)
@@ -37,11 +40,16 @@ class Snake():
                 self.score += 1
                 self.len += 1
                 self.create_Apple()
+                self.state = 1
             else:
                 Map[*self.body.pop(0)] = 0
+                self.state = 0
             Map[*self.xy] = 1
         else:
-            time.sleep(1)
+            if human:
+                time.sleep(1)
+            state = 2
+            score_arr.append(self.score)
             self.reset()
     
     def create_Apple(self):
@@ -62,17 +70,25 @@ class Snake():
         Map[*self.xy] = 1
         self.body = [self.xy.copy()]
         self.create_Apple()
+        self.state = 0 # 0 is normal, 1 eat apple, 2 is crash
+    
+    def apple_dist(self): #for agent
+        return np.sum((self.xy-self.apple)**2)**(1/2)
+
 
 import pygame as pg
 pg.init()
-scr = pg.display.set_mode(SIZE*block_size)
+scr = pg.display.set_mode(SIZE*block_size + [0, 80])
+pg.font.init()
+font = pg.font.SysFont('Comic Sans Ms', 30)
 snake = Snake()
 stop = False
-while not stop:
+
+def show():
     for event in pg.event.get():
         if event.type == pg.QUIT:
-            stop = True
-        elif event.type == pg.KEYDOWN:
+            return 1
+        elif event.type == pg.KEYDOWN and human:
             if event.key == pg.K_UP:
                 snake.change_dir(0)
             elif event.key == pg.K_DOWN:
@@ -81,14 +97,59 @@ while not stop:
                 snake.change_dir(2)
             elif event.key == pg.K_RIGHT:
                 snake.change_dir(3)
-    #scr.fill((255,255,255))
+    snake.move()
+    
+    scr.fill((255,255,255))
     for i in range(SIZE[0]):
         for j in range(SIZE[1]):
             pg.draw.rect(scr, ((i*30) % 150+105,(i*j*60) % 150+105,(j*30*40) % 150+105), (i*block_size,j*block_size,block_size,block_size))
-    snake.move()
-    for body in snake.body:
-        pg.draw.rect(scr, (255,0,0), np.hstack([body*block_size, [block_size, block_size]]))
+    score_text = font.render("score {0}".format(snake.score), False, (0, 0, 0))
+    scr.blit(score_text, (3, SIZE[1]*block_size))
+    steps_text = font.render("step {0}".format(steps), False, (0, 0, 0))
+    scr.blit(steps_text, (3, SIZE[1]*block_size+50))
+    for i in range(len(snake.body)):
+        pg.draw.rect(scr, (105+150//(i/3+1),0,0), np.hstack([snake.body[-i-1]*block_size, [block_size, block_size]]))
     pg.draw.circle(scr, (33,66,30), snake.apple * block_size + block_size//2, block_size//2)
     pg.display.update()
-    pg.time.delay(400)
+    return 0
 
+if human:
+    while not stop:
+        stop = show()
+        pg.time.delay(400)
+
+'''
+while not stop:
+    for event in pg.event.get():
+        if event.type == pg.QUIT:
+            stop = True
+        elif event.type == pg.KEYDOWN and human:
+            if event.key == pg.K_UP:
+                snake.change_dir(0)
+            elif event.key == pg.K_DOWN:
+                snake.change_dir(1)
+            elif event.key == pg.K_LEFT:
+                snake.change_dir(2)
+            elif event.key == pg.K_RIGHT:
+                snake.change_dir(3)
+    if human or can_go:
+        snake.move()
+    else:
+        continue
+    scr.fill((255,255,255))
+    for i in range(SIZE[0]):
+        for j in range(SIZE[1]):
+            pg.draw.rect(scr, ((i*30) % 150+105,(i*j*60) % 150+105,(j*30*40) % 150+105), (i*block_size,j*block_size,block_size,block_size))
+    score_text = font.render("score {0}".format(snake.score), False, (0, 0, 0))
+    scr.blit(score_text, (3, SIZE[1]*block_size))
+    for i in range(len(snake.body)):
+        pg.draw.rect(scr, (105+150//(i/3+1),0,0), np.hstack([snake.body[-i-1]*block_size, [block_size, block_size]]))
+    pg.draw.circle(scr, (33,66,30), snake.apple * block_size + block_size//2, block_size//2)
+    pg.display.update()
+
+    if human:
+        pg.time.delay(400)
+    else:
+        can_go = False
+
+'''

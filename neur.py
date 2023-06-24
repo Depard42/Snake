@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 import math
 
 def sig(t):
@@ -20,48 +21,55 @@ def to_full(y, num_classes):
     y_full[0, y] = 1
     return y_full
 
-input_dim = 2
-output_dim = 2
-h_dim = 3
-ALPHA = 0.0002
+
+ALPHA = 0.0004
 TIMES = 10000
 
 class ANN():
-    def __init__(self):
+    def __init__(self, settings):
         self.loss_arr = []
-
-        #x = np.random.randn(1, input_dim)
-        #y = 1
-
-        self.w1 = np.random.randn(input_dim, h_dim)
-        self.b1 = np.random.randn(1, h_dim)
-        self.w2 = np.random.randn(h_dim, output_dim)
-        self.b2 = np.random.randn(1, output_dim)
+        self.input_dim, self.h_dim, self.output_dim = settings
+        self.w1 = np.random.randn(self.input_dim, self.h_dim)
+        self.b1 = np.random.randn(1, self.h_dim)
+        self.w2 = np.random.randn(self.h_dim, self.output_dim)
+        self.b2 = np.random.randn(1, self.output_dim)
 
 
-    def 
-    t1 = x @ w1 + b1
-    h1 = sig(t1)
-    t2 = h1 @ w2 + b2
-    z = softmax(t2)
-    E = sparse_cross_entropy(z, y)
-    loss_arr.append(E)
+    def predict(self, x):
+        self.x = x
+        self.t1 = self.x @ self.w1 + self.b1
+        self.h1 = sig(self.t1)
+        self.t2 = self.h1 @ self.w2 + self.b2
+        self.z = softmax(self.t2)
+        out = np.argmax(self.z)
+        return out
 
-    y_full = to_full(y, output_dim)
-    de_dt2 = z-y_full
-    de_dw2 = h1.T @ de_dt2
-    de_db2 = de_dt2
-    de_dh1 = de_dt2 @ w2.T
-    de_dt1 = de_dh1 * derivative_sig(t1)
-    de_dw1 = x.T @ de_dt1
-    de_db1 = de_dt1
+    def calculate_error(self, y):
+        self.y = y
+        self.E = sparse_cross_entropy(self.z, self.y)
+        self.loss_arr.append(self.E)
 
-    w1 = w1 - ALPHA*de_dw1
-    b1 = b1 - ALPHA*de_db1
-    w2 = w2 - ALPHA*de_dw2
-    b2 = b2 - ALPHA*de_db2
+    def back_prop(self, y):
+        if type(y) == np.int64:
+            y_full = to_full(y, self.output_dim)
+        else:
+            g = np.array(y)
+            y_full = g.reshape((1, self.output_dim))
+        de_dt2 = self.z-y_full
+        de_dw2 = self.h1.T @ de_dt2
+        de_db2 = de_dt2
+        de_dh1 = de_dt2 @ self.w2.T
+        de_dt1 = de_dh1 * derivative_sig(self.t1)
+        de_dw1 = self.x.T @ de_dt1
+        de_db1 = de_dt1
 
+        self.w1 = self.w1 - ALPHA*de_dw1
+        self.b1 = self.b1 - ALPHA*de_db1
+        self.w2 = self.w2 - ALPHA*de_dw2
+        self.b2 = self.b2 - ALPHA*de_db2
 
-    import matplotlib.pyplot as plt
-    plt.plot(loss_arr)
-    plt.show()
+    def show_progress(self, arr = 0):
+        if type(arr)==int:
+            arr = self.loss_arr
+        plt.plot(arr)
+        plt.show()
