@@ -1,7 +1,7 @@
 import numpy as np
 import time
 #del dir num
-SIZE = np.array([6,6])
+SIZE = np.array([5,5])
 block_size = 60
 Map = np.zeros(SIZE).astype(int)
 human = __name__ == '__main__'
@@ -49,12 +49,7 @@ class Snake():
                 self.state = 0
                 Map.itemset(*self.xy, 1)
         else:
-            if human:
-                time.sleep(1)
-            state = 2
-            score_arr.append(self.score)
-            step_arr[-1] = steps - step_arr[-1]
-            self.reset()
+            self.looser()
     
     def create_Apple(self):
         while 1:
@@ -64,6 +59,14 @@ class Snake():
             Map.itemset(*self.apple, 2)
             break
     
+    def looser(self):
+        if human:
+                time.sleep(1)
+        self.state = 2
+        score_arr.append(self.score)
+        step_arr[-1] = steps - step_arr[-1]
+        self.reset()
+
     def reset(self):
         map_reset()
         self.xy = np.array([SIZE[0]//2,SIZE[1]//2]) 
@@ -75,7 +78,7 @@ class Snake():
         Map.itemset(*self.xy, 1)
         self.body = [self.xy.copy()]
         self.create_Apple()
-        self.state = 0 # 0 is normal, 1 eat apple, 2 is crash
+        #self.state = 0     0 is normal, 1 eat apple, 2 is crash
         step_arr.append(steps)
     
     def apple_dist(self): #for agent
@@ -91,19 +94,22 @@ font = pg.font.SysFont('Comic Sans Ms', 30)
 snake = Snake()
 stop = False
 
+def controls(event):
+    if event.key == pg.K_UP:
+        snake.change_dir(0)
+    elif event.key == pg.K_DOWN:
+        snake.change_dir(1)
+    elif event.key == pg.K_LEFT:
+        snake.change_dir(2)
+    elif event.key == pg.K_RIGHT:
+        snake.change_dir(3)
+
 def show():
     for event in pg.event.get():
         if event.type == pg.QUIT:
             return 1
         elif event.type == pg.KEYDOWN and human:
-            if event.key == pg.K_UP:
-                snake.change_dir(0)
-            elif event.key == pg.K_DOWN:
-                snake.change_dir(1)
-            elif event.key == pg.K_LEFT:
-                snake.change_dir(2)
-            elif event.key == pg.K_RIGHT:
-                snake.change_dir(3)
+            controls(event)
     snake.move()
     if human or steps>500000:
         scr.fill((255,255,255))
@@ -124,39 +130,3 @@ if human:
     while not stop:
         stop = show()
         pg.time.delay(400)
-
-'''
-while not stop:
-    for event in pg.event.get():
-        if event.type == pg.QUIT:
-            stop = True
-        elif event.type == pg.KEYDOWN and human:
-            if event.key == pg.K_UP:
-                snake.change_dir(0)
-            elif event.key == pg.K_DOWN:
-                snake.change_dir(1)
-            elif event.key == pg.K_LEFT:
-                snake.change_dir(2)
-            elif event.key == pg.K_RIGHT:
-                snake.change_dir(3)
-    if human or can_go:
-        snake.move()
-    else:
-        continue
-    scr.fill((255,255,255))
-    for i in range(SIZE[0]):
-        for j in range(SIZE[1]):
-            pg.draw.rect(scr, ((i*30) % 150+105,(i*j*60) % 150+105,(j*30*40) % 150+105), (i*block_size,j*block_size,block_size,block_size))
-    score_text = font.render("score {0}".format(snake.score), False, (0, 0, 0))
-    scr.blit(score_text, (3, SIZE[1]*block_size))
-    for i in range(len(snake.body)):
-        pg.draw.rect(scr, (105+150//(i/3+1),0,0), np.hstack([snake.body[-i-1]*block_size, [block_size, block_size]]))
-    pg.draw.circle(scr, (33,66,30), snake.apple * block_size + block_size//2, block_size//2)
-    pg.display.update()
-
-    if human:
-        pg.time.delay(400)
-    else:
-        can_go = False
-
-'''

@@ -3,11 +3,18 @@ import matplotlib.pyplot as plt
 import math
 
 def sig(t):
-    return 1/(1+math.e**t)
+    #return 1/(1+np.power(math.e, t))
+    x = t.copy()
+    x[x<=0] = 0
+    return x
 
 def derivative_sig(t):
-    s = sig(t)
-    return s+(1-s)
+    '''s = sig(t)
+    return s+(1-s)'''
+    x = t.copy()
+    x[x<=0] = 0
+    x[x>0] = 1
+    return x
 
 def softmax(t):
     out = np.exp(t)
@@ -22,19 +29,22 @@ def to_full(y, num_classes):
     return y_full
 
 
-ALPHA = 0.01
+ALPHA = 0.03
 TIMES = 10000
+
+def gen_weights(columns, lines):
+    return np.random.sample((columns, lines)).astype(np.longdouble)
 
 class ANN():
     def __init__(self, settings):
         self.loss_arr = []
         self.input_dim, self.h_dim, self.h2_dim, self.output_dim = settings
-        self.w1 = np.random.sample((self.input_dim, self.h_dim))
-        self.b1 = np.random.sample((1, self.h_dim))
-        self.ww = np.random.sample((self.h_dim, self.h2_dim))
-        self.bb = np.random.sample((1, self.h2_dim))
-        self.w2 = np.random.sample((self.h2_dim, self.output_dim))
-        self.b2 = np.random.sample((1, self.output_dim))
+        self.w1 =  gen_weights(self.input_dim, self.h_dim)
+        self.b1 =  gen_weights(1, self.h_dim)
+        self.ww =  gen_weights(self.h_dim, self.h2_dim)
+        self.bb =  gen_weights(1, self.h2_dim)
+        self.w2 =  gen_weights(self.h2_dim, self.output_dim)
+        self.b2 =  gen_weights(1, self.output_dim)
 
 
     def predict(self, x):
@@ -45,8 +55,18 @@ class ANN():
         self.hh = sig(self.tt)
         self.t2 = self.hh @ self.w2 + self.b2
         self.z = softmax(self.t2)
-        with open('file.txt', 'a+') as f:
-            f.write('{0}\n'.format(self.z))
+        '''with open('file.txt', 'a+') as f:
+            f.write('\n')
+            f.write('w1 max {0}\n'.format(self.w1.max()))
+            f.write('w2 max {0}\n'.format(self.w2.max()))
+            f.write('ww max {0}\n'.format(self.ww.max()))
+            f.write('w1 min {0}\n'.format(self.w1.min()))
+            f.write('w2 min {0}\n'.format(self.w2.min()))
+            f.write('ww min {0}\n'.format(self.ww.min()))
+            f.write('b1 max {0}\n'.format(self.b1.max()))
+            f.write('b1 min {0}\n'.format(self.b1.min()))
+            f.write('bb max {0}\n'.format(self.bb.max()))
+            f.write('bb min {0}\n'.format(self.bb.min()))'''
         out = np.argmax(self.z)
         return out
 
